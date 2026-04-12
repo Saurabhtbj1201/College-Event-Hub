@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const { corsOriginHandler } = require("./config/cors");
 
 const publicRoutes = require("./routes/publicRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -13,7 +14,8 @@ app.set("trust proxy", 1);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: corsOriginHandler,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   })
 );
 app.use(express.json());

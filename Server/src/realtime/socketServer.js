@@ -5,6 +5,7 @@ const Admin = require("../models/Admin");
 const User = require("../models/User");
 const { ADMIN_PERMISSIONS, hasPermission } = require("../config/permissions");
 const { isFeatureEnabled } = require("../config/featureFlags");
+const { corsOriginHandler } = require("../config/cors");
 
 let ioInstance = null;
 let userNamespaceInstance = null;
@@ -26,7 +27,7 @@ const parseToken = (socket) => {
 const initializeSocketServer = (httpServer) => {
   ioInstance = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      origin: corsOriginHandler,
       methods: ["GET", "POST"],
     },
   });

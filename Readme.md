@@ -96,6 +96,7 @@ PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/college_event_management
 JWT_SECRET=replace_with_a_strong_secret
 CLIENT_URL=http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://your-frontend-domain.com
 SUPER_ADMIN_NAME=Super Admin
 SUPER_ADMIN_EMAIL=admin@college.edu
 SUPER_ADMIN_PASSWORD=ChangeThisPassword123!
