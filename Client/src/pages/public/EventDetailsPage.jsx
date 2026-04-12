@@ -75,6 +75,12 @@ const EventDetailsPage = () => {
         >
           Smart Navigation
         </Link>
+        <Link
+          to={`/events/${event._id}/food`}
+          className="rounded-full border border-emerald-300 px-5 py-2.5 font-semibold text-emerald-700 hover:bg-emerald-50"
+        >
+          Food and Services
+        </Link>
         <Link to="/" className="rounded-full border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">
           Back to Events
         </Link>

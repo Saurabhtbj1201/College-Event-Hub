@@ -15,8 +15,14 @@ const {
   getRouteHint,
 } = require("../controllers/navigationController");
 const {
+  getPublicFoodCatalog,
+  placeFoodOrder,
+  getFoodOrderStatus,
+} = require("../controllers/foodController");
+const {
   publicRegistrationLimiter,
   publicQueueJoinLimiter,
+  publicFoodOrderLimiter,
 } = require("../middleware/rateLimitMiddleware");
 
 const router = express.Router();
@@ -32,6 +38,13 @@ router.post(
 );
 router.get("/events/:eventId/navigation", getEventNavigation);
 router.get("/events/:eventId/navigation/route", getRouteHint);
+router.get("/events/:eventId/food/catalog", getPublicFoodCatalog);
+router.post(
+  "/events/:eventId/food/orders",
+  publicFoodOrderLimiter,
+  placeFoodOrder
+);
+router.get("/food/orders/:orderId", getFoodOrderStatus);
 router.get("/queues/tickets/:ticketId", getQueueTicketStatus);
 router.get("/passes/:passId", getPassById);
 

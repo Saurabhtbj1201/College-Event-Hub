@@ -36,6 +36,9 @@ College Event Management/
 - Track queue ticket status and position
 - Explore smart navigation map for each event venue
 - Request route hints between venue zones
+- Browse food stalls and menu catalog for an event
+- Place food orders using event pass ID
+- Track food order lifecycle status
 
 ### Admin
 - Register as admin (starts as pending)
@@ -55,6 +58,10 @@ College Event Management/
 - Realtime simulator controls for crowd and queue auto-updates
 - Smart navigation map management APIs (save/reset template)
 - Admin Navigation Editor page for zone and route-hint configuration
+- Food and services operations foundation
+  - Manage stalls and menu catalog per event
+  - Monitor event food orders
+  - Progress order lifecycle (placed -> accepted -> preparing -> ready -> picked-up/cancelled)
 - Security hardening baseline
   - Route-level rate limiting for auth/admin mutations/public registration and queue joins
   - Socket auth hardening with permission checks and event room ID validation
@@ -148,6 +155,9 @@ Frontend URL: `http://localhost:5173`
 - `POST /api/public/events/:eventId/queues/:queuePointId/join`
 - `GET /api/public/events/:eventId/navigation`
 - `GET /api/public/events/:eventId/navigation/route?from=...&to=...`
+- `GET /api/public/events/:eventId/food/catalog`
+- `POST /api/public/events/:eventId/food/orders`
+- `GET /api/public/food/orders/:orderId?passId=...`
 - `GET /api/public/queues/tickets/:ticketId`
 - `GET /api/public/passes/:passId`
 
@@ -171,6 +181,13 @@ Frontend URL: `http://localhost:5173`
 - `POST /api/admin/scanner/check-in`
 - `PATCH /api/admin/events/:eventId/live-ops`
 - `POST /api/admin/events/:eventId/broadcast`
+- `POST /api/admin/events/:eventId/food/stalls`
+- `GET /api/admin/events/:eventId/food/stalls`
+- `PATCH /api/admin/food/stalls/:stallId`
+- `POST /api/admin/food/stalls/:stallId/items`
+- `PATCH /api/admin/food/items/:itemId`
+- `GET /api/admin/events/:eventId/food/orders`
+- `PATCH /api/admin/food/orders/:orderId/status`
 - `GET /api/admin/queues/overview`
 - `GET /api/admin/queues/analytics`
 - `POST /api/admin/events/:eventId/queues`
@@ -232,3 +249,8 @@ Phase 2 foundation implemented behind feature flags:
 - User in-app notification APIs with read-state tracking
 - User socket namespace (`/user`) with event subscription support
 - User dashboard shell routes on client (`/user/login`, `/dashboard`) when flags are enabled
+
+Phase 4 foundation started with food and services backend:
+- New Mongo models for stalls, catalog items, and food orders
+- Public APIs for food catalog, order placement, and order status tracking
+- Admin APIs for stall/catalog management and order lifecycle transitions

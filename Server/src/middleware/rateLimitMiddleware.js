@@ -41,10 +41,17 @@ const publicQueueJoinLimiter = buildLimiter({
   message: "Too many queue join attempts. Please retry later.",
 });
 
+const publicFoodOrderLimiter = buildLimiter({
+  windowMs: 5 * 60 * 1000,
+  max: 70,
+  message: "Too many food order attempts. Please retry shortly.",
+});
+
 module.exports = {
   authLimiter,
   adminMutationLimiter,
   scannerLimiter,
   publicRegistrationLimiter,
   publicQueueJoinLimiter,
+  publicFoodOrderLimiter,
 };

@@ -28,6 +28,15 @@ const {
   resetNavigationToDefault,
 } = require("../controllers/navigationController");
 const {
+  createFoodStall,
+  getAdminFoodStalls,
+  updateFoodStall,
+  createFoodItem,
+  updateFoodItem,
+  getAdminFoodOrders,
+  updateFoodOrderStatus,
+} = require("../controllers/foodController");
+const {
   protectAdmin,
   requireSuperAdmin,
   requirePermission,
@@ -76,6 +85,46 @@ router.post(
   adminMutationLimiter,
   requirePermission(ADMIN_PERMISSIONS.USER_BROADCAST),
   sendEventBroadcast
+);
+router.post(
+  "/events/:eventId/food/stalls",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.FOOD_MANAGE),
+  createFoodStall
+);
+router.get(
+  "/events/:eventId/food/stalls",
+  requirePermission(ADMIN_PERMISSIONS.FOOD_MANAGE),
+  getAdminFoodStalls
+);
+router.patch(
+  "/food/stalls/:stallId",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.FOOD_MANAGE),
+  updateFoodStall
+);
+router.post(
+  "/food/stalls/:stallId/items",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.FOOD_MANAGE),
+  createFoodItem
+);
+router.patch(
+  "/food/items/:itemId",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.FOOD_MANAGE),
+  updateFoodItem
+);
+router.get(
+  "/events/:eventId/food/orders",
+  requirePermission(ADMIN_PERMISSIONS.FOOD_ORDER_MANAGE),
+  getAdminFoodOrders
+);
+router.patch(
+  "/food/orders/:orderId/status",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.FOOD_ORDER_MANAGE),
+  updateFoodOrderStatus
 );
 router.get("/queues/overview", requirePermission(ADMIN_PERMISSIONS.QUEUE_VIEW), getQueueOverview);
 router.get("/queues/analytics", requirePermission(ADMIN_PERMISSIONS.QUEUE_VIEW), getQueueAnalytics);

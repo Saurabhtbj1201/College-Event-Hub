@@ -107,6 +107,56 @@ export const resetNavigationMap = async (eventId) => {
   return response.data;
 };
 
+export const createFoodStall = async (eventId, payload) => {
+  const response = await http.post(`/admin/events/${eventId}/food/stalls`, payload);
+  return response.data;
+};
+
+export const getAdminFoodStalls = async (eventId) => {
+  const response = await http.get(`/admin/events/${eventId}/food/stalls`);
+  return response.data;
+};
+
+export const updateFoodStall = async (stallId, payload) => {
+  const response = await http.patch(`/admin/food/stalls/${stallId}`, payload);
+  return response.data;
+};
+
+export const createFoodItem = async (stallId, payload) => {
+  const response = await http.post(`/admin/food/stalls/${stallId}/items`, payload);
+  return response.data;
+};
+
+export const updateFoodItem = async (itemId, payload) => {
+  const response = await http.patch(`/admin/food/items/${itemId}`, payload);
+  return response.data;
+};
+
+export const getAdminFoodOrders = async (eventId, options = {}) => {
+  const queryParams = new URLSearchParams();
+
+  if (options.status) {
+    queryParams.set("status", options.status);
+  }
+
+  if (options.stallId) {
+    queryParams.set("stallId", options.stallId);
+  }
+
+  if (typeof options.limit !== "undefined") {
+    queryParams.set("limit", String(options.limit));
+  }
+
+  const query = queryParams.toString();
+  const response = await http.get(`/admin/events/${eventId}/food/orders${query ? `?${query}` : ""}`);
+  return response.data;
+};
+
+export const updateFoodOrderStatus = async (orderId, payload) => {
+  const response = await http.patch(`/admin/food/orders/${orderId}/status`, payload);
+  return response.data;
+};
+
 export const getPendingAdmins = async () => {
   const response = await http.get("/admin/admins/pending");
   return response.data;

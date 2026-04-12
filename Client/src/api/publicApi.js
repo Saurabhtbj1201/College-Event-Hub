@@ -48,3 +48,19 @@ export const getEventRouteHint = async (eventId, fromCode, toCode) => {
   const response = await http.get(`/public/events/${eventId}/navigation/route${query}`);
   return response.data;
 };
+
+export const getFoodCatalog = async (eventId) => {
+  const response = await http.get(`/public/events/${eventId}/food/catalog`);
+  return response.data;
+};
+
+export const placeFoodOrder = async (eventId, payload) => {
+  const response = await http.post(`/public/events/${eventId}/food/orders`, payload);
+  return response.data;
+};
+
+export const getFoodOrderStatus = async (orderId, passId) => {
+  const query = `?passId=${encodeURIComponent(passId)}`;
+  const response = await http.get(`/public/food/orders/${orderId}${query}`);
+  return response.data;
+};

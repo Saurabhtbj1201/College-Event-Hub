@@ -49,6 +49,9 @@ const AdminLayout = () => {
             <NavLink to="/admin/navigation" className={navLinkClass}>
               Navigation Editor
             </NavLink>
+            <NavLink to="/admin/food" className={navLinkClass}>
+              Food Operations
+            </NavLink>
             <NavLink to="/admin/events/new" className={navLinkClass}>
               Create Event
             </NavLink>
