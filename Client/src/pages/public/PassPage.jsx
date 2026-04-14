@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import { getPassById } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const PassPage = () => {
   const { passId } = useParams();
   const location = useLocation();
+  const toast = useToast();
 
   const [data, setData] = useState(() => location.state?.preloadedPassData || null);
   const [loading, setLoading] = useState(!location.state?.preloadedPassData);
@@ -23,7 +25,9 @@ const PassPage = () => {
         const response = await getPassById(passId);
         setData(response);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to fetch pass details");
+        const message = err.response?.data?.message || "Unable to fetch pass details";
+        setError(message);
+        toast.error(message, "Pass unavailable");
       } finally {
         setLoading(false);
       }

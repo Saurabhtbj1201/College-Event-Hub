@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const queueTicketSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
@@ -49,5 +55,6 @@ const queueTicketSchema = new mongoose.Schema(
 queueTicketSchema.index({ queuePoint: 1, status: 1, joinedAt: 1 });
 queueTicketSchema.index({ queuePoint: 1, passId: 1, status: 1 });
 queueTicketSchema.index({ event: 1, status: 1 });
+queueTicketSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("QueueTicket", queueTicketSchema);

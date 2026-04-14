@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getEventNavigation, getEventRouteHint } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 
 const NavigationPage = () => {
   const { eventId } = useParams();
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,7 +35,9 @@ const NavigationPage = () => {
           }));
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load smart navigation map");
+        const message = err.response?.data?.message || "Unable to load smart navigation map";
+        setError(message);
+        toast.error(message, "Navigation unavailable");
       } finally {
         setLoading(false);
       }
@@ -51,7 +55,9 @@ const NavigationPage = () => {
     event.preventDefault();
 
     if (!routeForm.fromCode || !routeForm.toCode) {
-      setError("Please select both From and To zones");
+      const message = "Please select both From and To zones";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -59,8 +65,14 @@ const NavigationPage = () => {
       setError("");
       const response = await getEventRouteHint(eventId, routeForm.fromCode, routeForm.toCode);
       setRouteHint(response.routeHint);
+      toast.info(
+        `Estimated route time is ${response.routeHint?.estimatedMinutes || "-"} minute(s).`,
+        "Route generated"
+      );
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to fetch route hint");
+      const message = err.response?.data?.message || "Unable to fetch route hint";
+      setError(message);
+      toast.error(message, "Route fetch failed");
     }
   };
 
@@ -222,6 +234,12 @@ const NavigationPage = () => {
           className="rounded-full border border-brand-300 px-4 py-2 text-sm font-medium text-brand-700"
         >
           View Queue Board
+        </Link>
+        <Link
+          to={`/events/${eventId}/safety-social`}
+          className="rounded-full border border-red-300 px-4 py-2 text-sm font-medium text-red-700"
+        >
+          Safety and Social
         </Link>
       </div>
     </div>

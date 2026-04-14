@@ -37,6 +37,15 @@ const {
   updateFoodOrderStatus,
 } = require("../controllers/foodController");
 const {
+  getEmergencyIncidents,
+  updateEmergencyIncident,
+  sendEmergencyBroadcast,
+  getAdminSocialGroups,
+} = require("../controllers/emergencySocialController");
+const {
+  getAdminIntelligenceInsights,
+} = require("../controllers/intelligenceController");
+const {
   protectAdmin,
   requireSuperAdmin,
   requirePermission,
@@ -68,6 +77,11 @@ router.get(
   requirePermission(ADMIN_PERMISSIONS.COMMAND_VIEW),
   getCommandSummary
 );
+router.get(
+  "/events/:eventId/intelligence/insights",
+  requirePermission(ADMIN_PERMISSIONS.COMMAND_VIEW),
+  getAdminIntelligenceInsights
+);
 router.post(
   "/scanner/check-in",
   scannerLimiter,
@@ -85,6 +99,28 @@ router.post(
   adminMutationLimiter,
   requirePermission(ADMIN_PERMISSIONS.USER_BROADCAST),
   sendEventBroadcast
+);
+router.post(
+  "/events/:eventId/emergency/broadcast",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.EMERGENCY_MANAGE),
+  sendEmergencyBroadcast
+);
+router.get(
+  "/events/:eventId/emergency/incidents",
+  requirePermission(ADMIN_PERMISSIONS.EMERGENCY_MANAGE),
+  getEmergencyIncidents
+);
+router.patch(
+  "/emergency/incidents/:incidentId",
+  adminMutationLimiter,
+  requirePermission(ADMIN_PERMISSIONS.EMERGENCY_MANAGE),
+  updateEmergencyIncident
+);
+router.get(
+  "/events/:eventId/social/groups",
+  requirePermission(ADMIN_PERMISSIONS.SOCIAL_MANAGE),
+  getAdminSocialGroups
 );
 router.post(
   "/events/:eventId/food/stalls",

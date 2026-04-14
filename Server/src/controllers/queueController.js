@@ -551,6 +551,11 @@ const joinQueue = async (req, res, next) => {
     const { eventId, queuePointId } = req.params;
     const { passId } = req.body;
 
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to join queue");
+    }
+
     if (!passId) {
       res.status(400);
       throw new Error("passId is required to join queue");
@@ -572,11 +577,12 @@ const joinQueue = async (req, res, next) => {
     const registration = await Registration.findOne({
       event: eventId,
       passId: normalizedPassId,
+      $or: [{ user: req.user._id }, { email: req.user.email }],
     }).lean();
 
     if (!registration) {
       res.status(404);
-      throw new Error("Registration with this passId not found for the event");
+      throw new Error("This pass is not linked to your user account for the event");
     }
 
     const alreadyWaiting = await QueueTicket.findOne({
@@ -596,6 +602,7 @@ const joinQueue = async (req, res, next) => {
     });
 
     const ticket = await QueueTicket.create({
+      user: req.user._id,
       event: eventId,
       queuePoint: queuePoint._id,
       registration: registration._id,
@@ -659,14 +666,32 @@ const getQueueTicketStatus = async (req, res, next) => {
   try {
     const { ticketId } = req.params;
 
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to view queue ticket status");
+    }
+
     const ticket = await QueueTicket.findById(ticketId)
       .populate("queuePoint")
       .populate("event", "title")
+      .populate("registration", "email user")
       .lean();
 
     if (!ticket) {
       res.status(404);
       throw new Error("Queue ticket not found");
+    }
+
+    const ownsTicketByUserId = ticket.user && toIdString(ticket.user) === toIdString(req.user._id);
+    const ownsTicketByRegistration =
+      ticket.registration?.user && toIdString(ticket.registration.user) === toIdString(req.user._id);
+    const ownsTicketByEmail =
+      typeof ticket.registration?.email === "string" &&
+      ticket.registration.email.toLowerCase() === String(req.user.email || "").toLowerCase();
+
+    if (!ownsTicketByUserId && !ownsTicketByRegistration && !ownsTicketByEmail) {
+      res.status(403);
+      throw new Error("You are not authorized to view this queue ticket");
     }
 
     const waitingCount = await QueueTicket.countDocuments({

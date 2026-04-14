@@ -1,8 +1,4 @@
 import { Link, Outlet } from "react-router-dom";
-import {
-  isPhase2UserAuthEnabled,
-  isPhase2UserDashboardEnabled,
-} from "../config/featureFlags";
 import { useUserAuth } from "../contexts/UserAuthContext";
 
 const PublicLayout = () => {
@@ -19,31 +15,30 @@ const PublicLayout = () => {
             <Link to="/" className="hover:text-brand-700">
               Events
             </Link>
-            {isPhase2UserAuthEnabled ? (
-              isAuthenticated ? (
-                <>
-                  {isPhase2UserDashboardEnabled ? (
-                    <Link to="/dashboard" className="hover:text-brand-700">
-                      My Dashboard
-                    </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
-                  >
-                    User Logout
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/user/login"
-                  className="rounded-full border border-brand-300 px-4 py-2 text-brand-700 hover:bg-brand-50"
-                >
-                  User Login
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard" className="hover:text-brand-700">
+                  My Dashboard
                 </Link>
-              )
-            ) : null}
+                <Link to="/profile" className="hover:text-brand-700">
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                >
+                  User Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/user/login"
+                className="rounded-full border border-brand-300 px-4 py-2 text-brand-700 hover:bg-brand-50"
+              >
+                User Login
+              </Link>
+            )}
             <Link
               to="/admin/login"
               className="rounded-full bg-brand-500 px-4 py-2 text-white shadow-glow hover:bg-brand-700"

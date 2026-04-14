@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  getUserHistory,
   getUserNotifications,
   getUserTickets,
   markUserNotificationRead,
@@ -22,6 +23,19 @@ const UserDashboardPage = () => {
   const [tickets, setTickets] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [historySummary, setHistorySummary] = useState({
+    tickets: 0,
+    queueActions: 0,
+    foodOrders: 0,
+    emergencies: 0,
+    socialGroups: 0,
+  });
+  const [activityHistory, setActivityHistory] = useState({
+    queue: [],
+    food: [],
+    emergencies: [],
+    social: [],
+  });
   const [liveUpdates, setLiveUpdates] = useState([]);
   const [markingNotificationId, setMarkingNotificationId] = useState("");
 
@@ -42,9 +56,10 @@ const UserDashboardPage = () => {
       try {
         setLoading(true);
 
-        const [ticketData, notificationData] = await Promise.all([
+        const [ticketData, notificationData, historyData] = await Promise.all([
           getUserTickets(),
           getUserNotifications(50),
+          getUserHistory(50),
         ]);
 
         setTicketSummary(ticketData.summary || { totalTickets: 0, checkedIn: 0, upcoming: 0 });
@@ -60,6 +75,26 @@ const UserDashboardPage = () => {
             ? notificationData.unread
             : nextNotifications.filter((item) => !item.isRead).length
         );
+
+        if (historyData) {
+          setHistorySummary(
+            historyData.summary || {
+              tickets: 0,
+              queueActions: 0,
+              foodOrders: 0,
+              emergencies: 0,
+              socialGroups: 0,
+            }
+          );
+          setActivityHistory(
+            historyData.history || {
+              queue: [],
+              food: [],
+              emergencies: [],
+              social: [],
+            }
+          );
+        }
       } catch (err) {
         setError(err.response?.data?.message || "Unable to load user dashboard");
       } finally {
@@ -161,13 +196,21 @@ const UserDashboardPage = () => {
               Welcome back, {user?.name || "User"}. Your tickets, schedule, and live updates are here.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-          >
-            Logout
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/profile"
+              className="rounded-full border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+            >
+              Profile
+            </Link>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {error ? <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
@@ -189,6 +232,25 @@ const UserDashboardPage = () => {
         <article className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
           <p className="text-sm text-violet-700">Unread Alerts</p>
           <p className="mt-2 font-display text-3xl font-semibold text-violet-700">{unreadCount}</p>
+        </article>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <article className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+          <p className="text-sm text-indigo-700">Queue Actions</p>
+          <p className="mt-2 font-display text-3xl font-semibold text-indigo-700">{historySummary.queueActions}</p>
+        </article>
+        <article className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+          <p className="text-sm text-orange-700">Food Orders</p>
+          <p className="mt-2 font-display text-3xl font-semibold text-orange-700">{historySummary.foodOrders}</p>
+        </article>
+        <article className="rounded-2xl border border-red-100 bg-red-50 p-4">
+          <p className="text-sm text-red-700">Emergency Records</p>
+          <p className="mt-2 font-display text-3xl font-semibold text-red-700">{historySummary.emergencies}</p>
+        </article>
+        <article className="rounded-2xl border border-teal-100 bg-teal-50 p-4">
+          <p className="text-sm text-teal-700">Social Groups</p>
+          <p className="mt-2 font-display text-3xl font-semibold text-teal-700">{historySummary.socialGroups}</p>
         </article>
       </section>
 
@@ -294,6 +356,70 @@ const UserDashboardPage = () => {
                   <p className="font-semibold text-slate-900">{item.title}</p>
                   <p className="mt-1 text-sm text-slate-700">{item.message}</p>
                   <p className="mt-1 text-xs text-slate-500">{formatDateTime(item.createdAt)}</p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="font-display text-lg font-semibold text-slate-900">Service Activity</h2>
+          {activityHistory.queue.length === 0 && activityHistory.food.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">No queue or food service activity yet.</p>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {activityHistory.queue.slice(0, 5).map((item) => (
+                <article key={`queue-${item.id}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Queue: {item.queuePoint.name} ({item.queuePoint.type})
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Pass {item.passId} • {item.status} • {formatDateTime(item.joinedAt)}
+                  </p>
+                </article>
+              ))}
+
+              {activityHistory.food.slice(0, 5).map((item) => (
+                <article key={`food-${item.id}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Food: {item.orderNumber} • {item.status}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {item.stall.name} • ₹{item.totalAmount} • {formatDateTime(item.createdAt)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="font-display text-lg font-semibold text-slate-900">Safety and Social History</h2>
+          {activityHistory.emergencies.length === 0 && activityHistory.social.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">No safety/social activity yet.</p>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {activityHistory.emergencies.slice(0, 4).map((item) => (
+                <article key={`sos-${item.id}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    SOS: {item.status} ({item.severity})
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Pass {item.passId} • Zone {item.zoneCode || "N/A"} • {formatDateTime(item.createdAt)}
+                  </p>
+                </article>
+              ))}
+
+              {activityHistory.social.slice(0, 4).map((item) => (
+                <article key={`social-${item.id}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Group: {item.groupName} ({item.groupCode})
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Members {item.memberCount} • Updated {formatDateTime(item.updatedAt)}
+                  </p>
                 </article>
               ))}
             </div>

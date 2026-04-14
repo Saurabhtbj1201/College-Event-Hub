@@ -7,6 +7,56 @@ A simple MERN application with:
 - Admin signup approval controlled by super-admin
 - Admin-only access for viewing all registrations and creating events
 
+## Chosen Vertical
+
+Campus Event Operations and Engagement (EventTech).
+
+This project focuses on solving operational and attendee-experience challenges in college events:
+- registration and entry validation,
+- live command operations,
+- crowd and queue visibility,
+- venue navigation,
+- food ordering and service lifecycle,
+- attendee notifications and status tracking.
+
+## Approach and Logic
+
+- Phase-first delivery:
+  Build in incremental phases so each module is independently deployable and testable.
+- Domain module separation:
+  Keep backend modules focused by domain (`auth`, `events`, `queues`, `navigation`, `food`, `user`) to reduce coupling and simplify maintenance.
+- Realtime plus API model:
+  Use REST APIs for source-of-truth writes and reads, and Socket.IO for live operational updates.
+- Security baseline by default:
+  JWT auth, role/permission guards, rate limiting, and audit logs are integrated into critical flows.
+- Feature-flagged evolution:
+  User-facing Phase 2 capabilities (Google login, dashboard) are toggled by env flags to avoid unsafe partial releases.
+
+## How the Solution Works
+
+1. Event discovery and registration:
+  Public users browse events and register; system creates a registration with a unique pass ID and QR payload.
+2. Entry and command operations:
+  Admin scans passes, prevents duplicate check-ins, updates live event operations, and monitors command center metrics.
+3. Queue and navigation intelligence:
+  Queue points can be managed live; attendees can join virtual queues and fetch route hints for venue movement.
+4. User companion layer:
+  Optional Google-authenticated users can view tickets, notifications, and live event updates in dashboard.
+5. Food and services lifecycle:
+  Admin manages stalls and catalog; attendees place orders by pass ID; orders progress through status lifecycle (`placed` to `accepted` to `preparing` to `ready` to `picked-up/cancelled`).
+6. Realtime communication:
+  Operational updates, broadcasts, and order events are emitted to relevant admin/user sockets while persistent data remains in MongoDB.
+
+## Assumptions Made
+
+- College event teams operate with two admin roles: `admin` and `super-admin`.
+- Event capacity is informational and does not hard-block registrations.
+- Pass ID is treated as the lightweight attendee credential for queue and food operations.
+- Payment integration is out of scope for current food ordering phase.
+- Venue map geometry and route hints are manually configured by admins.
+- CORS allowlist is managed through environment variables for multi-deployment frontend origins.
+- Realtime updates are best-effort and complemented by API polling/read endpoints for consistency.
+
 ## Tech Stack
 
 - Frontend: React, Vite, Tailwind CSS, React Router, Axios
@@ -39,6 +89,10 @@ College Event Management/
 - Browse food stalls and menu catalog for an event
 - Place food orders using event pass ID
 - Track food order lifecycle status
+- Trigger SOS emergency alerts using pass ID
+- Get nearest-exit guidance from venue map zones
+- Create and join social groups with consent-based location sharing
+- View smart guidance recommendations (least-crowded gate, arrival window, rush forecast)
 
 ### Admin
 - Register as admin (starts as pending)
@@ -62,6 +116,15 @@ College Event Management/
   - Manage stalls and menu catalog per event
   - Monitor event food orders
   - Progress order lifecycle (placed -> accepted -> preparing -> ready -> picked-up/cancelled)
+- Emergency and social foundation
+  - Monitor and resolve SOS incidents
+  - Send event emergency broadcasts
+  - View social group activity summary
+- Rule-based intelligence (Phase 6)
+  - Generate deterministic event recommendations from telemetry
+  - Recommend least-crowded entry gate and best arrival window
+  - Predict near-term rush trend from queue/check-in velocities
+  - Visualize recent check-in and queue-join momentum buckets
 - Security hardening baseline
   - Route-level rate limiting for auth/admin mutations/public registration and queue joins
   - Socket auth hardening with permission checks and event room ID validation
@@ -156,9 +219,16 @@ Frontend URL: `http://localhost:5173`
 - `POST /api/public/events/:eventId/queues/:queuePointId/join`
 - `GET /api/public/events/:eventId/navigation`
 - `GET /api/public/events/:eventId/navigation/route?from=...&to=...`
+- `GET /api/public/events/:eventId/intelligence/recommendations`
+- `GET /api/public/events/:eventId/emergency/nearest-exit?from=...`
+- `POST /api/public/events/:eventId/emergency/sos`
 - `GET /api/public/events/:eventId/food/catalog`
 - `POST /api/public/events/:eventId/food/orders`
 - `GET /api/public/food/orders/:orderId?passId=...`
+- `POST /api/public/events/:eventId/social/groups`
+- `POST /api/public/events/:eventId/social/groups/:groupCode/join`
+- `PATCH /api/public/events/:eventId/social/groups/:groupCode/location`
+- `GET /api/public/events/:eventId/social/groups/:groupCode?passId=...`
 - `GET /api/public/queues/tickets/:ticketId`
 - `GET /api/public/passes/:passId`
 
@@ -182,6 +252,11 @@ Frontend URL: `http://localhost:5173`
 - `POST /api/admin/scanner/check-in`
 - `PATCH /api/admin/events/:eventId/live-ops`
 - `POST /api/admin/events/:eventId/broadcast`
+- `POST /api/admin/events/:eventId/emergency/broadcast`
+- `GET /api/admin/events/:eventId/emergency/incidents`
+- `PATCH /api/admin/emergency/incidents/:incidentId`
+- `GET /api/admin/events/:eventId/social/groups`
+- `GET /api/admin/events/:eventId/intelligence/insights`
 - `POST /api/admin/events/:eventId/food/stalls`
 - `GET /api/admin/events/:eventId/food/stalls`
 - `PATCH /api/admin/food/stalls/:stallId`
@@ -255,3 +330,14 @@ Phase 4 foundation started with food and services backend:
 - New Mongo models for stalls, catalog items, and food orders
 - Public APIs for food catalog, order placement, and order status tracking
 - Admin APIs for stall/catalog management and order lifecycle transitions
+
+Phase 5 foundation started with emergency and social backend:
+- New Mongo models for emergency incidents and social groups
+- Public SOS, nearest-exit, and social-group APIs
+- Admin emergency incident panel, emergency broadcast, and social-group monitoring APIs
+
+Phase 6 rule-based intelligence implemented:
+- Backend intelligence controller derives recommendations from registrations, check-ins, queue load, and live operations
+- Public recommendation API for smart gate, arrival, and rush guidance
+- Admin intelligence insights API with telemetry and 15-minute historical momentum buckets
+- Frontend pages added: public smart guidance (`/events/:eventId/intelligence`) and admin intelligence console (`/admin/intelligence`)

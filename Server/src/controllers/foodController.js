@@ -765,6 +765,11 @@ const placeFoodOrder = async (req, res, next) => {
     const { eventId } = req.params;
     const { passId, stallId, items, notes = "" } = req.body;
 
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to place food order");
+    }
+
     const normalizedPassId = normalizePassId(passId);
     if (!normalizedPassId || !stallId || !Array.isArray(items) || items.length === 0) {
       res.status(400);
@@ -785,11 +790,12 @@ const placeFoodOrder = async (req, res, next) => {
     const registration = await Registration.findOne({
       event: eventId,
       passId: normalizedPassId,
+      $or: [{ user: req.user._id }, { email: req.user.email }],
     }).lean();
 
     if (!registration) {
       res.status(404);
-      throw new Error("Registration with this passId not found for the event");
+      throw new Error("This pass is not linked to your user account for the event");
     }
 
     const stall = await FoodStall.findOne({
@@ -883,6 +889,7 @@ const placeFoodOrder = async (req, res, next) => {
         : null;
 
     const order = await FoodOrder.create({
+      user: req.user._id,
       event: eventId,
       stall: stall._id,
       registration: registration._id,
@@ -941,26 +948,20 @@ const placeFoodOrder = async (req, res, next) => {
       },
     });
 
-    const linkedUser = await User.findOne({ email: registration.email })
-      .select("_id")
-      .lean();
-
-    if (linkedUser?._id) {
-      await createUserNotification({
-        userId: linkedUser._id,
-        eventId,
-        type: "food-order-placed",
-        title: "Food order placed",
-        message: `Order ${orderNumber} has been placed at ${stall.name}.`,
-        payload: {
-          orderId: orderPayload.orderId,
-          orderNumber,
-          stallName: stall.name,
-          status: "placed",
-          estimatedReadyAt: orderPayload.estimatedReadyAt,
-        },
-      });
-    }
+    await createUserNotification({
+      userId: req.user._id,
+      eventId,
+      type: "food-order-placed",
+      title: "Food order placed",
+      message: `Order ${orderNumber} has been placed at ${stall.name}.`,
+      payload: {
+        orderId: orderPayload.orderId,
+        orderNumber,
+        stallName: stall.name,
+        status: "placed",
+        estimatedReadyAt: orderPayload.estimatedReadyAt,
+      },
+    });
 
     await logPublicAudit({
       req,
@@ -990,9 +991,9 @@ const getFoodOrderStatus = async (req, res, next) => {
     const { orderId } = req.params;
     const normalizedPassId = normalizePassId(req.query.passId || req.query.passid);
 
-    if (!normalizedPassId) {
-      res.status(400);
-      throw new Error("passId query parameter is required");
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to view food order status");
     }
 
     const order = await FoodOrder.findById(orderId)
@@ -1004,9 +1005,19 @@ const getFoodOrderStatus = async (req, res, next) => {
       throw new Error("Food order not found");
     }
 
-    if (order.passId !== normalizedPassId) {
+    const ownsByUser = order.user && toIdString(order.user) === toIdString(req.user._id);
+    const ownsByLegacyEmail =
+      typeof order.customerSnapshot?.email === "string" &&
+      order.customerSnapshot.email.toLowerCase() === String(req.user.email || "").toLowerCase();
+
+    if (!ownsByUser && !ownsByLegacyEmail) {
       res.status(403);
       throw new Error("You are not authorized to view this order");
+    }
+
+    if (normalizedPassId && order.passId !== normalizedPassId) {
+      res.status(403);
+      throw new Error("passId does not match this order");
     }
 
     res.json({
@@ -1173,13 +1184,17 @@ const updateFoodOrderStatus = async (req, res, next) => {
       },
     });
 
-    const linkedUser = await User.findOne({ email: order.customerSnapshot.email })
-      .select("_id")
-      .lean();
+    let linkedUserId = order.user ? toIdString(order.user) : "";
+    if (!linkedUserId) {
+      const linkedUser = await User.findOne({ email: order.customerSnapshot.email })
+        .select("_id")
+        .lean();
+      linkedUserId = linkedUser?._id ? linkedUser._id.toString() : "";
+    }
 
-    if (linkedUser?._id) {
+    if (linkedUserId) {
       await createUserNotification({
-        userId: linkedUser._id,
+        userId: linkedUserId,
         eventId,
         type: `food-order-${nextStatus}`,
         title: statusTitle,

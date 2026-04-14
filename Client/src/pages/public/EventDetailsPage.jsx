@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getPublicEventById } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const EventDetailsPage = () => {
   const { eventId } = useParams();
+  const toast = useToast();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -15,7 +17,9 @@ const EventDetailsPage = () => {
         const data = await getPublicEventById(eventId);
         setEvent(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event details");
+        const message = err.response?.data?.message || "Unable to load event details";
+        setError(message);
+        toast.error(message, "Event details unavailable");
       } finally {
         setLoading(false);
       }
@@ -80,6 +84,18 @@ const EventDetailsPage = () => {
           className="rounded-full border border-emerald-300 px-5 py-2.5 font-semibold text-emerald-700 hover:bg-emerald-50"
         >
           Food and Services
+        </Link>
+        <Link
+          to={`/events/${event._id}/safety-social`}
+          className="rounded-full border border-red-300 px-5 py-2.5 font-semibold text-red-700 hover:bg-red-50"
+        >
+          Safety and Social
+        </Link>
+        <Link
+          to={`/events/${event._id}/intelligence`}
+          className="rounded-full border border-violet-300 px-5 py-2.5 font-semibold text-violet-700 hover:bg-violet-50"
+        >
+          Smart Guidance
         </Link>
         <Link to="/" className="rounded-full border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">
           Back to Events

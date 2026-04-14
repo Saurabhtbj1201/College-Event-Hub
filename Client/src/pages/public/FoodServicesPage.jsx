@@ -5,12 +5,14 @@ import {
   getFoodOrderStatus,
   placeFoodOrder,
 } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const TERMINAL_ORDER_STATUSES = ["picked-up", "cancelled"];
 
 const FoodServicesPage = () => {
   const { eventId } = useParams();
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,7 +64,9 @@ const FoodServicesPage = () => {
           setSelectedStallId((current) => current || nextStalls[0].stallId);
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load food catalog");
+        const message = err.response?.data?.message || "Unable to load food catalog";
+        setError(message);
+        toast.error(message, "Food module unavailable");
       } finally {
         setLoading(false);
       }
@@ -107,12 +111,16 @@ const FoodServicesPage = () => {
     const normalizedPassId = passId.trim().toUpperCase();
 
     if (!normalizedPassId) {
-      setError("Pass ID is required to place food order");
+      const message = "Pass ID is required to place food order";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
     if (!selectedStallId) {
-      setError("Please select a stall");
+      const message = "Please select a stall";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -124,7 +132,9 @@ const FoodServicesPage = () => {
       .filter((item) => item.quantity > 0);
 
     if (orderItems.length === 0) {
-      setError("Select at least one menu item quantity");
+      const message = "Select at least one menu item quantity";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -145,10 +155,16 @@ const FoodServicesPage = () => {
       setTrackingOrderId(response.order?.orderId || "");
       setTrackingPassId(normalizedPassId);
       setNotice(`Order ${response.order?.orderNumber || ""} placed successfully`);
+      toast.success(
+        `Order ${response.order?.orderNumber || ""} has been placed successfully.`,
+        "Order placed"
+      );
       setQuantities({});
       setNotes("");
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to place food order");
+      const message = err.response?.data?.message || "Unable to place food order";
+      setError(message);
+      toast.error(message, "Order failed");
     } finally {
       setPlacingOrder(false);
     }
@@ -158,7 +174,9 @@ const FoodServicesPage = () => {
     eventHandle.preventDefault();
 
     if (!trackingOrderId.trim() || !trackingPassId.trim()) {
-      setError("Order ID and Pass ID are required to track order");
+      const message = "Order ID and Pass ID are required to track order";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -172,8 +190,11 @@ const FoodServicesPage = () => {
       );
       setTrackedOrder(response.order || null);
       setNotice(`Order ${response.order?.orderNumber || ""} status refreshed`);
+      toast.info(`Current order status is ${response.order?.status || "unknown"}.`, "Order status updated");
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to fetch order status");
+      const message = err.response?.data?.message || "Unable to fetch order status";
+      setError(message);
+      toast.error(message, "Track order failed");
     } finally {
       setCheckingOrder(false);
     }

@@ -8,6 +8,8 @@ const ADMIN_PERMISSIONS = {
   USER_BROADCAST: "user:broadcast",
   FOOD_MANAGE: "food:manage",
   FOOD_ORDER_MANAGE: "food-order:manage",
+  EMERGENCY_MANAGE: "emergency:manage",
+  SOCIAL_MANAGE: "social:manage",
   QUEUE_VIEW: "queue:view",
   QUEUE_MANAGE: "queue:manage",
   SIMULATOR_CONTROL: "simulator:control",
@@ -25,6 +27,8 @@ const DEFAULT_ADMIN_PERMISSIONS = [
   ADMIN_PERMISSIONS.USER_BROADCAST,
   ADMIN_PERMISSIONS.FOOD_MANAGE,
   ADMIN_PERMISSIONS.FOOD_ORDER_MANAGE,
+  ADMIN_PERMISSIONS.EMERGENCY_MANAGE,
+  ADMIN_PERMISSIONS.SOCIAL_MANAGE,
   ADMIN_PERMISSIONS.QUEUE_VIEW,
   ADMIN_PERMISSIONS.QUEUE_MANAGE,
   ADMIN_PERMISSIONS.SIMULATOR_CONTROL,
@@ -59,6 +63,13 @@ const hasPermission = (admin, permission) => {
 
   if (
     [ADMIN_PERMISSIONS.FOOD_MANAGE, ADMIN_PERMISSIONS.FOOD_ORDER_MANAGE].includes(permission) &&
+    permissions.includes(ADMIN_PERMISSIONS.LIVE_OPS_UPDATE)
+  ) {
+    return true;
+  }
+
+  if (
+    [ADMIN_PERMISSIONS.EMERGENCY_MANAGE, ADMIN_PERMISSIONS.SOCIAL_MANAGE].includes(permission) &&
     permissions.includes(ADMIN_PERMISSIONS.LIVE_OPS_UPDATE)
   ) {
     return true;

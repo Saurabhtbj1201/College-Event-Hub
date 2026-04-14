@@ -15,6 +15,11 @@ export const getUserTickets = async () => {
   return response.data;
 };
 
+export const getUserHistory = async (limit = 30) => {
+  const response = await http.get(`/user/history?limit=${encodeURIComponent(limit)}`);
+  return response.data;
+};
+
 export const getUserNotifications = async (limit = 30) => {
   const response = await http.get(`/user/notifications?limit=${encodeURIComponent(limit)}`);
   return response.data;

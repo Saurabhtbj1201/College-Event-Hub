@@ -35,6 +35,11 @@ export const getCommandSummary = async () => {
   return response.data;
 };
 
+export const getAdminIntelligenceInsights = async (eventId) => {
+  const response = await http.get(`/admin/events/${eventId}/intelligence/insights`);
+  return response.data;
+};
+
 export const scanTicketCheckIn = async (payload) => {
   const response = await http.post("/admin/scanner/check-in", payload);
   return response.data;
@@ -154,6 +159,52 @@ export const getAdminFoodOrders = async (eventId, options = {}) => {
 
 export const updateFoodOrderStatus = async (orderId, payload) => {
   const response = await http.patch(`/admin/food/orders/${orderId}/status`, payload);
+  return response.data;
+};
+
+export const sendEmergencyBroadcast = async (eventId, payload) => {
+  const response = await http.post(`/admin/events/${eventId}/emergency/broadcast`, payload);
+  return response.data;
+};
+
+export const getEmergencyIncidents = async (eventId, options = {}) => {
+  const queryParams = new URLSearchParams();
+
+  if (options.status) {
+    queryParams.set("status", options.status);
+  }
+
+  if (typeof options.limit !== "undefined") {
+    queryParams.set("limit", String(options.limit));
+  }
+
+  const query = queryParams.toString();
+  const response = await http.get(
+    `/admin/events/${eventId}/emergency/incidents${query ? `?${query}` : ""}`
+  );
+  return response.data;
+};
+
+export const updateEmergencyIncident = async (incidentId, payload) => {
+  const response = await http.patch(`/admin/emergency/incidents/${incidentId}`, payload);
+  return response.data;
+};
+
+export const getAdminSocialGroups = async (eventId, options = {}) => {
+  const queryParams = new URLSearchParams();
+
+  if (typeof options.activeOnly !== "undefined") {
+    queryParams.set("activeOnly", String(Boolean(options.activeOnly)));
+  }
+
+  if (typeof options.limit !== "undefined") {
+    queryParams.set("limit", String(options.limit));
+  }
+
+  const query = queryParams.toString();
+  const response = await http.get(
+    `/admin/events/${eventId}/social/groups${query ? `?${query}` : ""}`
+  );
   return response.data;
 };
 

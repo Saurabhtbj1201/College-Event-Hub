@@ -1,6 +1,5 @@
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
-const User = require("../models/User");
 const generatePassId = require("../utils/generatePassId");
 const { emitToAdmins, emitToEventRoom } = require("../realtime/socketServer");
 const { logPublicAudit } = require("../utils/auditLogger");
@@ -61,9 +60,22 @@ const registerForEvent = async (req, res, next) => {
   try {
     const { name, email, phone, college } = req.body;
 
-    if (!name || !email || !phone || !college) {
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to register");
+    }
+
+    const normalizedUserEmail = String(req.user.email || "").trim().toLowerCase();
+    const normalizedInputEmail = String(email || "").trim().toLowerCase();
+
+    if (normalizedInputEmail && normalizedInputEmail !== normalizedUserEmail) {
       res.status(400);
-      throw new Error("Name, email, phone and college are required");
+      throw new Error("Registration email must match logged-in user email");
+    }
+
+    if (!phone || !college) {
+      res.status(400);
+      throw new Error("Phone and college are required");
     }
 
     const event = await Event.findOne({
@@ -93,10 +105,17 @@ const registerForEvent = async (req, res, next) => {
       throw new Error("Unable to generate event pass. Please try again");
     }
 
+    const displayName = String(name || req.user.name || "").trim();
+    if (!displayName) {
+      res.status(400);
+      throw new Error("Name is required");
+    }
+
     const registration = await Registration.create({
+      user: req.user._id,
       event: event._id,
-      name,
-      email,
+      name: displayName,
+      email: normalizedUserEmail,
       phone,
       college,
       passId,
@@ -115,6 +134,7 @@ const registerForEvent = async (req, res, next) => {
       name: registration.name,
       email: registration.email,
       college: registration.college,
+      userId: req.user._id.toString(),
       createdAt: registration.createdAt,
     };
 
@@ -125,25 +145,19 @@ const registerForEvent = async (req, res, next) => {
       registrationSummary
     );
 
-    const linkedUser = await User.findOne({ email: registration.email })
-      .select("_id")
-      .lean();
-
-    if (linkedUser?._id) {
-      await createUserNotification({
-        userId: linkedUser._id,
-        eventId: event._id,
-        type: "ticket-created",
-        title: "New event ticket added",
-        message: `Your pass ${registration.passId} is ready for ${event.title}.`,
-        payload: {
-          passId: registration.passId,
-          eventTitle: event.title,
-          eventDate: event.date,
-          venue: event.venue,
-        },
-      });
-    }
+    await createUserNotification({
+      userId: req.user._id,
+      eventId: event._id,
+      type: "ticket-created",
+      title: "New event ticket added",
+      message: `Your pass ${registration.passId} is ready for ${event.title}.`,
+      payload: {
+        passId: registration.passId,
+        eventTitle: event.title,
+        eventDate: event.date,
+        venue: event.venue,
+      },
+    });
 
     await logPublicAudit({
       req,
@@ -180,8 +194,14 @@ const registerForEvent = async (req, res, next) => {
 
 const getPassById = async (req, res, next) => {
   try {
+    if (!req.user?._id) {
+      res.status(401);
+      throw new Error("User login is required to access pass details");
+    }
+
     const registration = await Registration.findOne({
       passId: req.params.passId,
+      $or: [{ user: req.user._id }, { email: req.user.email }],
     }).lean();
 
     if (!registration) {

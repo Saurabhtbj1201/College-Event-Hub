@@ -5,7 +5,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserAuthProvider } from "./contexts/UserAuthContext";
-import { FEATURE_FLAGS, isPhase2UserAuthEnabled } from "./config/featureFlags";
+import { ToastProvider } from "./contexts/ToastContext";
+import { FEATURE_FLAGS } from "./config/featureFlags";
 import "./index.css";
 
 const appTree = (
@@ -13,7 +14,9 @@ const appTree = (
     <BrowserRouter>
       <AuthProvider>
         <UserAuthProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </UserAuthProvider>
       </AuthProvider>
     </BrowserRouter>
@@ -22,7 +25,7 @@ const appTree = (
 
 const rootNode = document.getElementById("root");
 
-if (isPhase2UserAuthEnabled && FEATURE_FLAGS.googleClientId) {
+if (FEATURE_FLAGS.googleClientId) {
   ReactDOM.createRoot(rootNode).render(
     <GoogleOAuthProvider clientId={FEATURE_FLAGS.googleClientId}>
       {appTree}

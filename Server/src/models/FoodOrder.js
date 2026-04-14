@@ -60,6 +60,12 @@ const foodOrderStatusSchema = new mongoose.Schema(
 
 const foodOrderSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
@@ -173,5 +179,6 @@ const foodOrderSchema = new mongoose.Schema(
 foodOrderSchema.index({ event: 1, status: 1, createdAt: -1 });
 foodOrderSchema.index({ stall: 1, status: 1, createdAt: -1 });
 foodOrderSchema.index({ passId: 1, createdAt: -1 });
+foodOrderSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("FoodOrder", foodOrderSchema);

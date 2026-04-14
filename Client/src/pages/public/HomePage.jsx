@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getPublicEvents } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const HomePage = () => {
+  const toast = useToast();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,7 +16,9 @@ const HomePage = () => {
         const data = await getPublicEvents();
         setEvents(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load events right now");
+        const message = err.response?.data?.message || "Unable to load events right now";
+        setError(message);
+        toast.error(message, "Events unavailable");
       } finally {
         setLoading(false);
       }

@@ -5,10 +5,12 @@ import {
   getQueueTicketStatus,
   joinEventQueue,
 } from "../../api/publicApi";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const QueueStatusPage = () => {
   const { eventId } = useParams();
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,7 +42,9 @@ const QueueStatusPage = () => {
         setLoading(true);
         await loadQueues();
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load queue details");
+        const message = err.response?.data?.message || "Unable to load queue details";
+        setError(message);
+        toast.error(message, "Queue board unavailable");
       } finally {
         setLoading(false);
       }
@@ -75,7 +79,9 @@ const QueueStatusPage = () => {
     event.preventDefault();
 
     if (!joinForm.queuePointId || !joinForm.passId.trim()) {
-      setError("Queue point and pass ID are required");
+      const message = "Queue point and pass ID are required";
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -90,13 +96,16 @@ const QueueStatusPage = () => {
 
       setTicketState(response.ticket);
       setNotice(`Joined queue at ${response.queuePoint.pointName}`);
+      toast.success(`Joined ${response.queuePoint.pointName} queue successfully.`, "Queue joined");
       setJoinForm((current) => ({
         ...current,
         passId: "",
       }));
       await loadQueues();
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to join queue");
+      const message = err.response?.data?.message || "Unable to join queue";
+      setError(message);
+      toast.error(message, "Queue action failed");
     } finally {
       setJoining(false);
     }
@@ -211,12 +220,20 @@ const QueueStatusPage = () => {
       </div>
 
       <div>
-        <Link
-          to={`/events/${eventId}`}
-          className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-        >
-          Back to Event Details
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to={`/events/${eventId}`}
+            className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+          >
+            Back to Event Details
+          </Link>
+          <Link
+            to={`/events/${eventId}/intelligence`}
+            className="inline-flex rounded-full border border-violet-300 px-4 py-2 text-sm font-medium text-violet-700"
+          >
+            Open Smart Guidance
+          </Link>
+        </div>
       </div>
     </div>
   );

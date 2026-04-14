@@ -1,13 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useUserAuth } from "../contexts/UserAuthContext";
-import { isPhase2UserDashboardEnabled } from "../config/featureFlags";
 
 const UserProtectedRoute = () => {
+  const location = useLocation();
   const { loading, isAuthenticated } = useUserAuth();
-
-  if (!isPhase2UserDashboardEnabled) {
-    return <Navigate to="/" replace />;
-  }
 
   if (loading) {
     return (
@@ -18,7 +14,7 @@ const UserProtectedRoute = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/user/login" replace />;
+    return <Navigate to="/user/login" replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;

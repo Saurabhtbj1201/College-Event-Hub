@@ -10,9 +10,16 @@ const http = axios.create({
 http.interceptors.request.use((config) => {
   const requestPath = String(config.url || "");
 
-  const token = requestPath.startsWith("/user")
-    ? localStorage.getItem(USER_TOKEN_KEY)
-    : localStorage.getItem(ADMIN_TOKEN_KEY);
+  const useAdminToken =
+    requestPath.startsWith("/admin") || requestPath.startsWith("/auth/admin");
+  const useUserToken =
+    requestPath.startsWith("/user") || requestPath.startsWith("/public");
+
+  const token = useAdminToken
+    ? localStorage.getItem(ADMIN_TOKEN_KEY)
+    : useUserToken
+      ? localStorage.getItem(USER_TOKEN_KEY)
+      : "";
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

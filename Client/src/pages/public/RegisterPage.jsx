@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getPublicEventById, registerForEvent } from "../../api/publicApi";
+import { useUserAuth } from "../../contexts/UserAuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import { formatDateTime } from "../../utils/date";
 
 const initialForm = {
@@ -13,6 +15,8 @@ const initialForm = {
 const RegisterPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { user } = useUserAuth();
+  const toast = useToast();
 
   const [event, setEvent] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -26,7 +30,9 @@ const RegisterPage = () => {
         const data = await getPublicEventById(eventId);
         setEvent(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event");
+        const message = err.response?.data?.message || "Unable to load event";
+        setError(message);
+        toast.error(message, "Event unavailable");
       } finally {
         setLoading(false);
       }
@@ -34,6 +40,18 @@ const RegisterPage = () => {
 
     loadEvent();
   }, [eventId]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      name: current.name || user.name || "",
+      email: user.email || current.email,
+    }));
+  }, [user]);
 
   const handleChange = (eventInput) => {
     const { name, value } = eventInput.target;
@@ -47,11 +65,14 @@ const RegisterPage = () => {
 
     try {
       const response = await registerForEvent(eventId, form);
+      toast.success(`Your pass ${response.pass.passId} is ready.`, "Registration completed");
       navigate(`/pass/${response.pass.passId}`, {
         state: { preloadedPassData: response },
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      const message = err.response?.data?.message || "Registration failed";
+      setError(message);
+      toast.error(message, "Registration failed");
     } finally {
       setSubmitting(false);
     }
@@ -93,8 +114,10 @@ const RegisterPage = () => {
               name="email"
               value={form.email}
               onChange={handleChange}
+              readOnly
               className="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none transition focus:border-brand-500"
             />
+            <span className="mt-1 block text-xs text-slate-500">Using your signed-in Google account email.</span>
           </label>
 
           <label className="block">

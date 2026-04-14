@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const registrationSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
@@ -69,5 +75,6 @@ const registrationSchema = new mongoose.Schema(
 
 registrationSchema.index({ event: 1 });
 registrationSchema.index({ event: 1, ticketStatus: 1 });
+registrationSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Registration", registrationSchema);

@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getUserProfile } from "../api/userApi";
-import { isPhase2UserAuthEnabled } from "../config/featureFlags";
 
 const UserAuthContext = createContext(null);
 
@@ -19,13 +18,11 @@ const getStoredUser = () => {
 export const UserAuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem(USER_TOKEN_KEY) || "");
   const [user, setUser] = useState(() => getStoredUser());
-  const [loading, setLoading] = useState(
-    isPhase2UserAuthEnabled && Boolean(localStorage.getItem(USER_TOKEN_KEY))
-  );
+  const [loading, setLoading] = useState(Boolean(localStorage.getItem(USER_TOKEN_KEY)));
 
   useEffect(() => {
     const bootstrap = async () => {
-      if (!isPhase2UserAuthEnabled || !token) {
+      if (!token) {
         setLoading(false);
         return;
       }
@@ -63,7 +60,7 @@ export const UserAuthProvider = ({ children }) => {
 
   const value = useMemo(
     () => ({
-      featureEnabled: isPhase2UserAuthEnabled,
+      featureEnabled: true,
       token,
       user,
       loading,
