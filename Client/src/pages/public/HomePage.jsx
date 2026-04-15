@@ -41,8 +41,16 @@ const HomePage = () => {
         </p>
       </section>
 
-      {loading ? <p className="text-slate-600">Loading events...</p> : null}
-      {error ? <p className="rounded-2xl bg-red-50 p-4 text-red-700">{error}</p> : null}
+      {loading ? (
+        <p role="status" aria-live="polite" className="text-slate-600">
+          Loading events...
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="rounded-2xl bg-red-50 p-4 text-red-700">
+          {error}
+        </p>
+      ) : null}
 
       {!loading && !error && events.length === 0 ? (
         <p className="rounded-2xl border border-slate-200 bg-white p-5 text-slate-600">No events are currently available.</p>

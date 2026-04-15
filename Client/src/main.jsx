@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UserAuthProvider } from "./contexts/UserAuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { FEATURE_FLAGS } from "./config/featureFlags";
+import { initializeGoogleAnalytics } from "./utils/googleAnalytics";
 import "./index.css";
 
 const appTree = (
@@ -24,6 +25,8 @@ const appTree = (
 );
 
 const rootNode = document.getElementById("root");
+
+initializeGoogleAnalytics(FEATURE_FLAGS.googleAnalyticsMeasurementId);
 
 if (FEATURE_FLAGS.googleClientId) {
   ReactDOM.createRoot(rootNode).render(

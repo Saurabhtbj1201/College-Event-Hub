@@ -6,12 +6,15 @@ const PublicLayout = () => {
 
   return (
     <div className="min-h-screen bg-hero-radial">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <header className="border-b border-slate-200 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/" className="font-display text-xl font-semibold text-brand-900">
             College Event Hub
           </Link>
-          <nav className="flex items-center gap-5 text-sm font-medium text-slate-700">
+          <nav aria-label="Primary" className="flex items-center gap-5 text-sm font-medium text-slate-700">
             <Link to="/" className="hover:text-brand-700">
               Events
             </Link>
@@ -49,11 +52,11 @@ const PublicLayout = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <main id="main-content" tabIndex="-1" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Outlet />
       </main>
 
-      <footer className="border-t border-slate-200 bg-white/80 py-4 text-center text-sm text-slate-600">
+      <footer role="contentinfo" className="border-t border-slate-200 bg-white/80 py-4 text-center text-sm text-slate-600">
         College Event Hub - Built for simple campus event registrations
       </footer>
     </div>

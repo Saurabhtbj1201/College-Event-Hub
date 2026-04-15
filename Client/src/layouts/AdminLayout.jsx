@@ -11,6 +11,9 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div>
@@ -36,7 +39,7 @@ const AdminLayout = () => {
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8">
         <aside className="rounded-2xl bg-white p-4 shadow-sm">
-          <nav className="flex flex-col gap-2">
+          <nav aria-label="Admin" className="flex flex-col gap-2">
             <NavLink to="/admin/dashboard" className={navLinkClass}>
               Overview
             </NavLink>
@@ -72,7 +75,7 @@ const AdminLayout = () => {
           </nav>
         </aside>
 
-        <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <section id="main-content" tabIndex="-1" className="rounded-2xl bg-white p-5 shadow-sm">
           <Outlet />
         </section>
       </div>

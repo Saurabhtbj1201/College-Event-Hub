@@ -52,7 +52,11 @@ const UserLoginPage = () => {
       {FEATURE_FLAGS.googleClientId ? (
         <div className="space-y-3">
           <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google login failed")} />
-          {loading ? <p className="text-sm text-slate-500">Verifying Google account...</p> : null}
+          {loading ? (
+            <p role="status" aria-live="polite" className="text-sm text-slate-500">
+              Verifying Google account...
+            </p>
+          ) : null}
         </div>
       ) : (
         <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
@@ -60,7 +64,11 @@ const UserLoginPage = () => {
         </p>
       )}
 
-      {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
 
       <div className="pt-2 text-sm">
         <Link to="/" className="font-semibold text-brand-700 hover:text-brand-900">

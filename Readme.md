@@ -199,6 +199,7 @@ VITE_API_URL=http://localhost:5000/api
 VITE_ENABLE_PHASE2_USER_AUTH=false
 VITE_ENABLE_PHASE2_USER_DASHBOARD=false
 VITE_GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 5. Start frontend:
@@ -208,6 +209,26 @@ npm run dev
 ```
 
 Frontend URL: `http://localhost:5173`
+
+Google Analytics 4 (optional):
+- If `VITE_GA_MEASUREMENT_ID` is set, the client injects the GA4 script and tracks route page views.
+- If empty, analytics remains disabled with zero runtime impact.
+
+## Testing
+
+Client tests (Vitest):
+
+```bash
+cd Client
+npm run test:run
+```
+
+Server tests (Jest + Supertest):
+
+```bash
+cd Server
+npm test
+```
 
 ## API Summary
 

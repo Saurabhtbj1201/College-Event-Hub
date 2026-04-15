@@ -20,6 +20,7 @@ export const FEATURE_FLAGS = {
     phase2UserAuth
   ),
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+  googleAnalyticsMeasurementId: import.meta.env.VITE_GA_MEASUREMENT_ID || "",
 };
 
 export const isPhase2UserAuthEnabled = FEATURE_FLAGS.phase2UserAuth;

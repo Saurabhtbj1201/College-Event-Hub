@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserProtectedRoute from "./components/UserProtectedRoute";
 import PublicLayout from "./layouts/PublicLayout";
@@ -27,8 +28,17 @@ import AdminIntelligencePage from "./pages/admin/AdminIntelligencePage";
 import CreateEventPage from "./pages/admin/CreateEventPage";
 import RegistrationsPage from "./pages/admin/RegistrationsPage";
 import PendingAdminsPage from "./pages/admin/PendingAdminsPage";
+import { FEATURE_FLAGS } from "./config/featureFlags";
+import { trackPageView } from "./utils/googleAnalytics";
 
 const App = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const pagePath = `${location.pathname}${location.search}`;
+    trackPageView(FEATURE_FLAGS.googleAnalyticsMeasurementId, pagePath);
+  }, [location.pathname, location.search]);
+
   return (
     <Routes>
       <Route path="/" element={<PublicLayout />}>

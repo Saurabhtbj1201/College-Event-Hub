@@ -17,6 +17,27 @@ body {
   background-color: var(--page-bg);
 }
 
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -999px;
+  z-index: 50;
+  border-radius: 9999px;
+  background: #1f2937;
+  color: #ffffff;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -27,4 +48,15 @@ textarea,
 button,
 select {
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
