@@ -10,7 +10,14 @@ describe("userAuthMiddleware", () => {
 
   beforeEach(() => {
     req = { headers: {} };
-    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    res = {
+      statusCode: 200,
+      status: jest.fn(function status(code) {
+        this.statusCode = code;
+        return this;
+      }),
+      json: jest.fn(),
+    };
     next = jest.fn();
     jest.clearAllMocks();
   });
@@ -19,14 +26,16 @@ describe("userAuthMiddleware", () => {
     it("fails with 401 if token is missing", async () => {
       await protectUser(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, no user token" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("User authorization token missing");
     });
 
     it("fails with 401 if invalid format", async () => {
       req.headers.authorization = "Basic token";
       await protectUser(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, no user token" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("User authorization token missing");
     });
 
     it("fails with 401 if token fails verification", async () => {
@@ -36,14 +45,19 @@ describe("userAuthMiddleware", () => {
       });
       await protectUser(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, user token failed" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("Invalid format");
     });
 
     it("succeeds and attaches user to request", async () => {
       req.headers.authorization = "Bearer valid-token";
-      jwt.verify.mockReturnValue({ id: "user-id" });
+      jwt.verify.mockReturnValue({ id: "user-id", type: "user" });
       User.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue({ _id: "user-id", email: "test@example.com" }),
+        select: jest.fn().mockResolvedValue({
+          _id: "user-id",
+          email: "test@example.com",
+          isActive: true,
+        }),
       });
 
       await protectUser(req, res, next);
@@ -53,6 +67,7 @@ describe("userAuthMiddleware", () => {
       expect(req.user).toBeDefined();
       expect(req.user.email).toBe("test@example.com");
       expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith();
     });
   });
 });

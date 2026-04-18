@@ -5,11 +5,22 @@ const { emitToAdmins, emitToEventRoom } = require("../realtime/socketServer");
 const { logPublicAudit } = require("../utils/auditLogger");
 const { createUserNotification } = require("../utils/userNotificationService");
 
+const parseLimit = (value, fallback, maxLimit) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return Math.min(parsed, maxLimit);
+};
+
 const getPublicEvents = async (req, res, next) => {
   try {
+    const limit = parseLimit(req.query.limit, 100, 200);
     const events = await Event.find({ isActive: true })
       .select("title date venue description capacity")
       .sort({ date: 1 })
+      .limit(limit)
       .lean();
 
     res.json(events);

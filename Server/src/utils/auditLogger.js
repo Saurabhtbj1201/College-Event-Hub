@@ -1,16 +1,18 @@
 const AuditLog = require("../models/AuditLog");
 
 const resolveIpAddress = (req) => {
-  const forwarded = req.headers["x-forwarded-for"];
+  const headers = req?.headers || {};
+  const forwarded = headers["x-forwarded-for"];
   if (typeof forwarded === "string" && forwarded.trim()) {
     return forwarded.split(",")[0].trim();
   }
 
-  return req.ip || req.socket?.remoteAddress || null;
+  return req?.ip || req?.socket?.remoteAddress || null;
 };
 
 const resolveUserAgent = (req) => {
-  const userAgent = req.headers["user-agent"];
+  const headers = req?.headers || {};
+  const userAgent = headers["user-agent"];
   return typeof userAgent === "string" && userAgent.trim() ? userAgent.trim() : null;
 };
 

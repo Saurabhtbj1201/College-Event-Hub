@@ -10,7 +10,14 @@ describe("authMiddleware", () => {
 
   beforeEach(() => {
     req = { headers: {} };
-    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    res = {
+      statusCode: 200,
+      status: jest.fn(function status(code) {
+        this.statusCode = code;
+        return this;
+      }),
+      json: jest.fn(),
+    };
     next = jest.fn();
     jest.clearAllMocks();
   });
@@ -19,14 +26,16 @@ describe("authMiddleware", () => {
     it("fails if no auth header", async () => {
       await protectAdmin(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, no token" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("Not authorized. Token missing");
     });
 
     it("fails if not bearer token", async () => {
       req.headers.authorization = "Basic token123";
       await protectAdmin(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, no token" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("Not authorized. Token missing");
     });
 
     it("fails if token validation throws", async () => {
@@ -36,29 +45,32 @@ describe("authMiddleware", () => {
       });
       await protectAdmin(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized, token failed" });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe("jwt malformed");
     });
 
     it("succeeds and attaches admin object to req", async () => {
       req.headers.authorization = "Bearer validtoken";
       jwt.verify.mockReturnValue({ id: "admin-id" });
       Admin.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue({ _id: "admin-id", role: "admin", isApproved: true }),
+        select: jest.fn().mockResolvedValue({ _id: "admin-id", role: "admin", approved: true }),
       });
 
       await protectAdmin(req, res, next);
       expect(req.admin).toBeDefined();
       expect(req.admin._id).toBe("admin-id");
       expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith();
     });
   });
 
   describe("requireSuperAdmin", () => {
     it("fails if not super-admin", () => {
       req.admin = { role: "admin" };
-      requireSuperAdmin(req, res, next);
+      expect(() => requireSuperAdmin(req, res, next)).toThrow(
+        "Only super-admin can perform this action"
+      );
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized as super admin" });
     });
 
     it("succeeds if super-admin", () => {
@@ -72,9 +84,10 @@ describe("authMiddleware", () => {
     it("fails if admin lacks required permission and is not super admin", () => {
       req.admin = { role: "admin", permissions: ["view_events"] };
       const middleware = requirePermission("create_events");
-      middleware(req, res, next);
+      expect(() => middleware(req, res, next)).toThrow(
+        "Insufficient permissions for this action"
+      );
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ message: "Not authorized for this action" });
     });
 
     it("succeeds if admin has required permission", () => {

@@ -9,6 +9,24 @@ const {
   emitLiveEventUpdate,
 } = require("../utils/userNotificationService");
 
+const parsePositiveInt = (value, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return parsed;
+};
+
+const getPagination = (query, { defaultLimit, maxLimit }) => {
+  const page = parsePositiveInt(query.page, 1);
+  const requestedLimit = parsePositiveInt(query.limit, defaultLimit);
+  const limit = Math.min(requestedLimit, maxLimit);
+  const skip = (page - 1) * limit;
+
+  return { page, limit, skip };
+};
+
 const serializeRegistration = (registration) => ({
   registrationId: registration._id,
   passId: registration.passId,
@@ -121,9 +139,16 @@ const createEvent = async (req, res, next) => {
 
 const getAdminEvents = async (req, res, next) => {
   try {
+    const { limit, skip } = getPagination(req.query, {
+      defaultLimit: 250,
+      maxLimit: 500,
+    });
+
     const events = await Event.find()
       .populate("createdBy", "name email role")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json(events);
@@ -134,10 +159,17 @@ const getAdminEvents = async (req, res, next) => {
 
 const getRegistrations = async (req, res, next) => {
   try {
+    const { limit, skip } = getPagination(req.query, {
+      defaultLimit: 250,
+      maxLimit: 500,
+    });
+
     const registrations = await Registration.find()
       .populate("event", "title date venue")
       .populate("checkedInBy", "name email")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json(registrations);

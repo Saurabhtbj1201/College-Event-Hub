@@ -11,8 +11,10 @@ describe("auditLogger", () => {
   describe("logPublicAudit", () => {
     it("creates an audit log entry using request info", async () => {
       const mockReq = {
+        headers: {
+          "user-agent": "user-agent-string",
+        },
         ip: "127.0.0.1",
-        get: jest.fn().mockReturnValue("user-agent-string"),
       };
 
       const params = {
@@ -31,7 +33,7 @@ describe("auditLogger", () => {
       const callData = AuditLog.create.mock.calls[0][0];
 
       expect(callData).toMatchObject({
-        actorRole: "public",
+        actorType: "public",
         actorId: "actor-1",
         action: "public.register",
         resourceType: "registration",
@@ -45,8 +47,10 @@ describe("auditLogger", () => {
 
     it("suppresses errors when creation fails", async () => {
       const mockReq = {
+        headers: {
+          "user-agent": "user-agent-string",
+        },
         ip: "127.0.0.1",
-        get: jest.fn(),
       };
       
       const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -60,7 +64,7 @@ describe("auditLogger", () => {
           resourceType: "registration",
           status: "success",
         })
-      ).resolves.toBeUndefined();
+      ).resolves.toBeNull();
 
       expect(errorSpy).toHaveBeenCalled();
       errorSpy.mockRestore();
